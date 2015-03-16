@@ -24,27 +24,6 @@ int delayval = 500; // delay for half a second
 void setup() 
 {
   pixels.begin(); // This initializes the NeoPixel library.
-  
-  for (int bright = 0; bright < 255; bright++)
-  {
-    for (int x = 0; x < NUMPIXELS; x++)
-    {
-      pixels.setPixelColor(x,pixels.Color(bright,bright,bright));
-    }
-    pixels.show();
-    delay(10);
-  }
-  
-  for (int bright = 255; bright >0; bright--)
-  {
-    for (int x = 0; x < NUMPIXELS; x++)
-    {
-      pixels.setPixelColor(x,pixels.Color(bright,bright,bright));
-    }
-    pixels.show();
-    delay(10);
-  }
-    
 }
 
 void loop() {
@@ -58,7 +37,7 @@ void loop() {
       LED[x].Tf = random(50,300);
       Delay[x] = random(FLASH_DELAY_L,FLASH_DELAY_H);
     }
-    LED[x].flash();
+    LED[x].update();
     pixels.setPixelColor(x,pixels.Color(LED[x].R, LED[x].G, LED[x].B));
   }
   pixels.show();
