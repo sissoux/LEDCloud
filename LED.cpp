@@ -14,6 +14,38 @@ LED::LED(unsigned int ID, unsigned int Tfall)
 }
 
 
+
+  void LED::update()
+  {
+    switch (State)
+    {
+      case FLASH:
+        this->flash();
+      break;
+      
+      case CHAINEDFLASH:
+      
+      break;
+      
+      case STATIC:
+      
+      break;
+      
+      case COLORFADING:
+      
+      break;
+      
+      case RANDOMCOLOR:
+      
+      break;
+      
+      case BLACKOUT:
+      
+      break;
+    }
+  }
+  
+
 void LED::flash()
 {
   if (this->Trig)                                          //if this LED is trigerred clear trigger flag, set active flag mark begining of flash
@@ -56,5 +88,26 @@ void LED::flash()
     this->B = 0;
   }
 }
+
+  void LED::chainedFlash()
+  {
+    
+  }
+  void LED::static()
+  {
+    
+  }
+  void LED::colorFading()
+  {
+    
+  }
+  void LED::randomColor()
+  {
+    
+  }
+  void LED::blackout()
+  {
+    
+  }
 
 
