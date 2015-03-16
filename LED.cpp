@@ -15,7 +15,7 @@ LED::LED(unsigned int ID, unsigned int Tfall)
 
 
 
-  void LED::update()
+  void LED::update(pixelState State)
   {
     switch (State)
     {
@@ -44,6 +44,7 @@ LED::LED(unsigned int ID, unsigned int Tfall)
       break;
     }
   }
+
   
 
 void LED::flash()
@@ -93,7 +94,7 @@ void LED::flash()
   {
     
   }
-  void LED::static()
+  void LED::color()
   {
     
   }

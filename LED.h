@@ -23,16 +23,15 @@ class LED
   LED();
   LED(unsigned int ID, unsigned int Tfall);
   
-  pixelState State = BLACKOUT;
   pixelState PreviousState = BLACKOUT;
   
   void flash();
   void chainedFlash();
-  void static();
+  void color();
   void colorFading();
   void randomColor();
   void blackout();
-  void update();
+  void update(pixelState);
   
   unsigned int Tr = 1;
   unsigned int Ts = 0;
