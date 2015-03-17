@@ -16,7 +16,7 @@ unsigned int ChainDelay = 1;
 unsigned long Time = 0;
 unsigned long TIMEU = 0;
 LED LED[NUMPIXELS];
-pixelState State = FLASH;
+effect CurrentEffect = BLACKOUT;
 
 int Chain = 0;
 int Index = 0;
@@ -74,7 +74,6 @@ void loop()
       LED[Index].Trig = 1;
       LED[Index].Tf = random(2,100);
     }
-    //Serial.println(Index);
     if (millis() - Time > ChainDelay)
     {
       ChainDelay = random(0,10);
@@ -91,13 +90,19 @@ void loop()
     }
   }
 
+  generateOutput();
+
+}
+
+
+void generateOutput()
+{
   for (int x = 0; x < NUMPIXELS; x++)
   {
-    LED[x].update(State);
+    LED[x].update(CurrentEffect);
     pixels.setPixelColor(x,pixels.Color(LED[x].R, LED[x].G, LED[x].B));
   }
   pixels.show();
-
 }
 
 
