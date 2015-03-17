@@ -15,11 +15,11 @@ LED::LED(unsigned int ID, unsigned int Tfall)
 
 
 
-  void LED::update(pixelState State)
+  void LED::update(effect Effect)
   {
-    switch (State)
+    switch (this->Effect)
     {
-      case FLASH:
+      case RANDOMFLASH:
         this->flash();
       break;
       
@@ -40,7 +40,7 @@ LED::LED(unsigned int ID, unsigned int Tfall)
       break;
       
       case BLACKOUT:
-      
+        blackout();
       break;
     }
   }
@@ -108,7 +108,9 @@ void LED::flash()
   }
   void LED::blackout()
   {
-    
+    this->R = 0;
+    this->G = 0;
+    this->B = 0;
   }
 
 
