@@ -26,7 +26,7 @@ int Index = 0;
 // example for more information on possible values.
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-int delayval = 1000; // delay for half a second
+int delayval = 1000; // delay for salut c'est alf 
 
 void setup() 
 {
