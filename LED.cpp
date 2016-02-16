@@ -4,7 +4,7 @@
 
 LED::LED()
 {
-  
+
 }
 
 LED::LED(unsigned int ID, unsigned int Tfall)
@@ -15,37 +15,39 @@ LED::LED(unsigned int ID, unsigned int Tfall)
 
 
 
-  void LED::update(pixelState State)
+void LED::update(pixelState State)
+{
+  switch (State)
   {
-    switch (State)
-    {
-      case FLASH:
-        this->flash();
-      break;
-      
-      case CHAINEDFLASH:
-      
-      break;
-      
-      case STATIC:
-      
-      break;
-      
-      case COLORFADING:
-      
-      break;
-      
-      case RANDOMCOLOR:
-      
-      break;
-      
-      case BLACKOUT:
-      
-      break;
-    }
-  }
+  case FLASH:
+    this->flash();
+    break;
 
-  
+  case CHAINEDFLASH:
+
+    break;
+
+  case STATIC:
+
+    break;
+
+  case COLORFADING:
+
+    break;
+
+  case RANDOMCOLOR:
+
+    break;
+
+  case BLACKOUT:
+    this->R = 0;
+    this->G = 0;
+    this->B = 0;
+    break;
+  }
+}
+
+
 
 void LED::flash()
 {
@@ -90,25 +92,27 @@ void LED::flash()
   }
 }
 
-  void LED::chainedFlash()
-  {
-    
-  }
-  void LED::color()
-  {
-    
-  }
-  void LED::colorFading()
-  {
-    
-  }
-  void LED::randomColor()
-  {
-    
-  }
-  void LED::blackout()
-  {
-    
-  }
+void LED::chainedFlash()
+{
+
+}
+void LED::color()
+{
+
+}
+void LED::colorFading()
+{
+
+}
+void LED::randomColor()
+{
+
+}
+void LED::blackout()
+{
+
+}
+
+
 
 
