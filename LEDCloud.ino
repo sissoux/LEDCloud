@@ -41,7 +41,7 @@ unsigned int ChainDelay = 1;
 unsigned long Time = 0;
 unsigned long TIMEU = 0;
 LED LED[NUMPIXELS];
-effect CurrentEffect = BLACKOUT;
+pixelState State = FLASH;
 
 int T = 0;
 
@@ -57,9 +57,12 @@ mode;
 mode Mode = STBY;
 mode serialParse();
 
+// When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
+// Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
+// example for more information on possible values.
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-int delayval = 1000; // delay for salut c'est alf 
+int delayval = 1000; // delay for half a second
 
 void setup() 
 {
@@ -162,48 +165,8 @@ mode serialParse()
 }
 
 
-<<<<<<< HEAD
 
 
-=======
-  if (Chain)
-  {
-    if (!LED[Index].Active)
-    {
-      LED[Index].Trig = 1;
-      LED[Index].Tf = random(2,100);
-    }
-    if (millis() - Time > ChainDelay)
-    {
-      ChainDelay = random(0,10);
-      Time = millis();
-      if (Index < NUMPIXELS)
-      {
-        Index++;
-      }
-      else if (!LED[Index].Active)
-      {
-        Index = 0;
-        Chain = 0;
-      }
-    }
-  }
-
-  generateOutput();
-
-}
-
-
-void generateOutput()
-{
-  for (int x = 0; x < NUMPIXELS; x++)
-  {
-    LED[x].update(CurrentEffect);
-    pixels.setPixelColor(x,pixels.Color(LED[x].R, LED[x].G, LED[x].B));
-  }
-  pixels.show();
-}
->>>>>>> origin/master
 
 
 
