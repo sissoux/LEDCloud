@@ -60,7 +60,7 @@ void setup()
   FastLED.addLeds<NEOPIXEL, 3>(StripCommander.leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 5>(StripCommander.leds, 3 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-  
+
 #ifdef DEBUG_MODE
   Serial.begin(115200);
   while (!Serial);
@@ -164,18 +164,18 @@ void IR_Management()
       StripCommander.fadeToHSV(10, 255, 255, 1500);
       break;
     case Flash:
-    {
-      Serial.println("Flash");
-      uint8_t FlashCount = random(1, 15);
-      for (uint8_t i = 0; i <= FlashCount; i++)
       {
-        StripCommander.flash(random(0, NUM_LEDS));
+        Serial.println("Flash");
+        uint8_t FlashCount = random(1, 15);
+        for (uint8_t i = 0; i <= FlashCount; i++)
+        {
+          StripCommander.flash(random(0, NUM_LEDS));
+        }
+        if (!ThunderCenter.isPlaying())
+        {
+          ThunderCenter.play("THUNDER.WAV");
+        }
       }
-      if (!ThunderCenter.isPlaying())
-      {
-        ThunderCenter.play("THUNDER.WAV");
-      }
-    }
       break;
     case RPT:
       Serial.println("Repeat");
@@ -263,6 +263,7 @@ void serialParse()
         i++;
       }
     }
+    while (Serial.available()) char a = Serial.read();
 
     JsonObject& root = jsonBuffer.parseObject(input);
     const char* method = root["method"];
@@ -287,7 +288,7 @@ void serialParse()
       StripCommander.setToHSV(root["H"], root["S"], root["V"]);
       LastFrameShowed = false;
     }
-    else if (strcmp(method, "rainbow") == 0)
+    else if (strcmp(method, "rainbow") == 0)    //{method:rainbow}
     {
       Serial.println("Rainbow");
       StripCommander.rainbow();
@@ -309,6 +310,25 @@ void serialParse()
     else if (strcmp(method, "rdmGroupFlash") == 0) //{method:rdmGroupFlash}
     {
       StripCommander.groupFlash();
+    }
+    else if (strcmp(method, "rain") == 0) //{method:rain}
+    {
+      if (!Rain.isPlaying())
+      {
+        Rain.play("RAIN.WAV");
+      }
+      else
+      {
+        Rain.stop();
+      }
+    }
+    else if (strcmp(method, "thunder") == 0) //{method:thunder}
+    {
+      if (!ThunderLeft.isPlaying())
+      {
+        ThunderLeft.play("THUNDER.WAV");
+        StripCommander.groupFlash();
+      }
     }
     else
     {

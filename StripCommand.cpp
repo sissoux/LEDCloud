@@ -187,4 +187,3 @@ void StripCommand::rainbow()
   fill_rainbow(leds, 56, 10, 5);
   StateChanged = true;
 }
-

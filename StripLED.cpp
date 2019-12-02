@@ -74,5 +74,3 @@ CRGB StripLED::update()
   }
   return CRGB::Black;
 }
-
-
