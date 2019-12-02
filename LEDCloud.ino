@@ -60,9 +60,12 @@ void setup()
   FastLED.addLeds<NEOPIXEL, 3>(StripCommander.leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 5>(StripCommander.leds, 3 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-
+  
+#ifdef DEBUG_MODE
   Serial.begin(115200);
   while (!Serial);
+#endif
+
 #ifdef VERBOSE
   Serial.println("Port Opened.");
   Serial.println("Initializing");
@@ -278,7 +281,7 @@ void serialParse()
       StripCommander.setToRGB(root["R"], root["G"], root["B"]);
       LastFrameShowed = false;
     }
-    else if (strcmp(method, "setToHSV") == 0)
+    else if (strcmp(method, "setToHSV") == 0) //{method:setToHSV,H:255,S:100,V:0}
     {
       Serial.println("set to HSV value");
       StripCommander.setToHSV(root["H"], root["S"], root["V"]);
@@ -292,7 +295,7 @@ void serialParse()
     }
     else if (strcmp(method, "flash") == 0)
     {
-      Serial.println("Flash");
+      Serial.println("Flash");      //{method:flash}
       uint8_t FlashCount = random(1, 15);
       for (uint8_t i = 0; i <= FlashCount; i++)
       {
@@ -311,12 +314,6 @@ void serialParse()
     {
       Serial.println("ca ne marche pas ^^");
     }
-    Serial.println(micros() - time);
+    //Serial.println(micros() - time);
   }
 }
-
-
-
-
-
-
