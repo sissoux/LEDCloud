@@ -1,0 +1,37 @@
+{
+  "version": "1",
+  "target": "vsCode",
+  "buildSystem": "makefile",
+  "debugSupport": "none",
+  "configurations": [
+    {
+      "name": "default",
+      "guid": "58c42cf6-5223-4791-89a9-5442b1723bff",
+      "setupType": "quick",
+      "coreBase": "C:\\arduino-1.8.9\\hardware\\teensy\\avr",
+      "compilerBase": "C:\\arduino-1.8.9\\hardware\\tools\\arm",
+      "makefileExtension": null,
+      "copyCore": false,
+      "sharedLibraries": [],
+      "projectLibraries": [
+        "FastLED",
+        "Audio",
+        "ArduinoJson-5.9.0.zip",
+        "Wire",
+        "SPI",
+        "SD",
+        "SerialFlash",
+        "IRremote"
+      ],
+      "board": {
+        "name": "Teensy 3.2 / 3.1",
+        "options": {
+          "USB Type": "Serial",
+          "CPU Speed": "96 MHz (overclock)",
+          "Optimize": "Faster",
+          "Keyboard Layout": "US English"
+        }
+      }
+    }
+  ]
+}
