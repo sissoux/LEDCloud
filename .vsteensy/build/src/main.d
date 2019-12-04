@@ -184,4 +184,4 @@
  lib/ArduinoJson/src/ArduinoJson/Polyfills/../TypeTraits/FloatTraits.hpp \
  lib/ArduinoJson/src/ArduinoJson/Polyfills/parseInteger.hpp \
  lib/ArduinoJson/src/ArduinoJson/Serialization/JsonSerializerImpl.hpp \
- src/StripLED.h src/StripCommand.h src/IRdefine.h
+ src/StripLED.h src/StripCommand.h src/IRdefine.h src/Thunder.h

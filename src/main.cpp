@@ -12,9 +12,13 @@
 #include "StripLED.h"
 #include "StripCommand.h"
 #include "IRdefine.h"
+#include "Thunder.h"
 
 
 StripCommand StripCommander;
+
+Thunder T1 = Thunder("THUNDER.WAV", &StripCommander);
+Thunder T2 = Thunder("THUNDER.WAV", &StripCommander);
 
 elapsedMillis RefreshOutputTimer = 0;
 #define OUTPUT_REFRESH_RATE 7
@@ -58,7 +62,8 @@ void init_Player();
 ircmd getIRCmd();
 void IR_Management();
 void taskManager();
-
+void toggleRain();
+void startTHunder();
 
 
 uint8_t Brightness = 0;
@@ -70,19 +75,25 @@ void setup()
   FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 5>(StripCommander.leds, 3 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
 
-#ifdef DEBUG_MODE
+
   Serial.begin(115200);
+#ifdef DEBUG_MODE
   while (!Serial);
 #endif
 
-#ifdef VERBOSE
+#ifdef DEBUG_MODE
   Serial.println("Port Opened.");
   Serial.println("Initializing");
 #endif
   StripCommander.begin();
   IR.enableIRIn();
   init_Player();
-#ifdef VERBOSE
+
+  T1.addEvent(100, SingleFlash);
+  T1.addEvent(600, GroupFlash);
+  T1.addEvent(800, GroupFlash);
+
+#ifdef DEBUG_MODE
   Serial.println("Successfully Initialized.");
 #endif
   FastLED.show();   //Clear all LEDs
@@ -91,40 +102,13 @@ void setup()
 void loop()
 {
   taskManager();
-
-  if (!Rain.isPlaying())
-  {
-    Rain.play("RAIN.WAV");
-  }
-  /*
-    delay(3000);
-    if (!ThunderLeft.isPlaying())
-    {
-    ThunderLeft.play("THUNDER.WAV");
-    }
-    delay(3000);
-    if (!ThunderRight.isPlaying())
-    {
-    ThunderRight.play("THUNDER.WAV");
-    }
-    delay(3000);
-    if (!ThunderCenter.isPlaying())
-    {
-    ThunderCenter.play("THUNDER.WAV");
-    }
-
-    delay(100);*/
-
-
 }
 
 void taskManager()
 {
   IR_Management();
 
-#ifdef DEBUG_MODE
   serialParse();
-#endif
 
   if (RefreshOutputTimer >= OUTPUT_REFRESH_RATE)
   {
@@ -150,42 +134,30 @@ void IR_Management()
     case Ip:
       Serial.println("Intensity +");
       Brightness  = constrain(Brightness + 10, 0, 255);
-      //leds[0] = CHSV(10, 255, Brightness);
-      //StateChanged = true;
       IRRepeatTimeout = 0;
       LastIRCmd = Ip;
       break;
+
     case Im:
       Serial.println("Intensity -");
       Brightness  = constrain(Brightness - 10, 0, 255);
-      //leds[0] = CHSV(10, 255, Brightness);
-      //StateChanged = true;
       IRRepeatTimeout = 0;
       LastIRCmd = Im;
       break;
+
     case Play:
-      if (!Rain.isPlaying())
-      {
-        Rain.play("RAIN.WAV");
-      }
+        toggleRain();
       break;
+
     case Ca:
       StripCommander.fadeToHSV(10, 255, 255, 1500);
       break;
+
     case Flash:
-      {
-        Serial.println("Flash");
-        uint8_t FlashCount = random(1, 15);
-        for (uint8_t i = 0; i <= FlashCount; i++)
-        {
-          StripCommander.flash(random(0, NUM_LEDS));
-        }
-        if (!ThunderCenter.isPlaying())
-        {
-          ThunderCenter.play("THUNDER.WAV");
-        }
-      }
+        Serial.println("Start Thunder");
+        startTHunder();
       break;
+
     case RPT:
       Serial.println("Repeat");
       if ( IRRepeatTimeout < IR_REPEAT_TIMEOUT)
@@ -204,6 +176,7 @@ void IR_Management()
       }
       else LastIRCmd = NO_CMD;
       break;
+
     default: break;
   }
 }
@@ -259,7 +232,6 @@ void init_Player()
 void serialParse()
 {
   if (Serial.available()) {
-    Serial.println("Serial received.");
     char lastChar = '\0';
     int i = 0;
 
@@ -320,6 +292,22 @@ void serialParse()
     }
     else if (strcmp(method, "rain") == 0) //{method:rain}
     {
+      toggleRain();
+    }
+    else if (strcmp(method, "thunder") == 0) //{method:thunder}
+    {
+      startTHunder();
+    }
+    else
+    {
+      Serial.println("ca ne marche pas ^^");
+    }
+  }
+}
+
+
+void toggleRain()
+{
       if (!Rain.isPlaying())
       {
         Rain.play("RAIN.WAV");
@@ -328,18 +316,9 @@ void serialParse()
       {
         Rain.stop();
       }
-    }
-    else if (strcmp(method, "thunder") == 0) //{method:thunder}
-    {
-      if (!ThunderLeft.isPlaying())
-      {
-        ThunderLeft.play("THUNDER.WAV");
-        StripCommander.groupFlash();
-      }
-    }
-    else
-    {
-      Serial.println("ca ne marche pas ^^");
-    }
-  }
+}
+
+void startTHunder()
+{
+  T1.trig(&ThunderCenter);
 }

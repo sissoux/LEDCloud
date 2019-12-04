@@ -8,7 +8,7 @@ StripCommand::StripCommand()
 
 void StripCommand::begin()
 {
-  for (uint8_t i = 0; i < NUM_LEDS ; i++ )
+  for (uint8_t i = 0; i < NUM_LEDS; i++)
   {
     pixels[i].init(i, Group[i]);
   }
@@ -19,48 +19,60 @@ void StripCommand::dynamicStateUpdate()
   RunningFX = false;
   switch (CurrentMode)
   {
-    case Flashing :
+  case Flashing:
+  {
+    for (uint8_t i = 0; i < NUM_LEDS; i++)
+    {
+      leds[i] = pixels[i].update();
+      RunningFX |= pixels[i].Active;
+    }
+  }
+  break;
+  case Fading:
+  {
+    if (!FadingDone)
+    {
+      RunningFX = true;
+      if (tStrip >= RefreshRate)
       {
-        for (uint8_t i = 0; i < NUM_LEDS ; i++ )
+        while (tStrip >= RefreshRate)
         {
-          leds[i] = pixels[i].update();
-          RunningFX |= pixels[i].Active;
+          Serial.println(GradientIndex);
+          tStrip -= RefreshRate;
         }
-      } break;
-    case Fading:
-      {
-        if ( !FadingDone )
+        if (GradientIndex < 150)
         {
-          RunningFX = true;
-          if (tStrip >= RefreshRate)
-          {
-            while (tStrip >= RefreshRate)
-            {
-              Serial.println(GradientIndex);
-              tStrip -= RefreshRate;
-            }
-            if (GradientIndex < 150)
-            {
-              GradientIndex++;
-              fill_solid(leds, NUM_LEDS, GradientBuffer[GradientIndex - 1]);
-              return;
-            }
-            else
-            {
-              fill_solid(leds, NUM_LEDS, TargetColor);
-              RunningFX = false;
-              FadingDone = true;
-            }
-          }
+          GradientIndex++;
+          fill_solid(leds, NUM_LEDS, GradientBuffer[GradientIndex - 1]);
+          return;
+        }
+        else
+        {
+          fill_solid(leds, NUM_LEDS, TargetColor);
+          RunningFX = false;
+          FadingDone = true;
         }
       }
+    }
   }
+  }
+}
 
+void StripCommand::flash()
+{
+  if (CurrentMode != Flashing && RunningFX)
+    return;
+  CurrentMode = Flashing;
+  uint16_t Id = random(0, NUM_LEDS);
+  pixels[Id].Mode = Flashing;
+  pixels[Id].Offset = random(20, 300);
+  pixels[Id].Trigger = 1;
 }
 
 void StripCommand::flash(uint16_t Id)
 {
-  if ( CurrentMode != Flashing && RunningFX) return;
+  if (CurrentMode != Flashing && RunningFX)
+    return;
   CurrentMode = Flashing;
   pixels[Id].Mode = Flashing;
   pixels[Id].Offset = random(20, 300);
@@ -69,7 +81,8 @@ void StripCommand::flash(uint16_t Id)
 
 void StripCommand::flash(uint16_t Id, uint16_t Offset)
 {
-  if ( CurrentMode != Flashing && RunningFX) return;
+  if (CurrentMode != Flashing && RunningFX)
+    return;
   CurrentMode = Flashing;
   pixels[Id].Mode = Flashing;
   pixels[Id].Offset = Offset;
@@ -78,7 +91,8 @@ void StripCommand::flash(uint16_t Id, uint16_t Offset)
 
 void StripCommand::groupFlash(uint8_t gr, uint8_t dir)
 {
-  if ( CurrentMode != Flashing && RunningFX) return;
+  if (CurrentMode != Flashing && RunningFX)
+    return;
   Serial.println("GroupFlash received");
   CurrentMode = Flashing;
   uint8_t spd = random(2, 25);
@@ -113,9 +127,23 @@ void StripCommand::groupFlash()
   groupFlash(gr, dir);
 }
 
+void StripCommand::flashAll()
+{
+  if (CurrentMode != Flashing && RunningFX)
+    return;
+  CurrentMode = Flashing;
+  for (uint16_t Id = 0; Id < NUM_LEDS; Id++)
+  {
+    pixels[Id].Mode = Flashing;
+    pixels[Id].Offset = random(20, 300);
+    pixels[Id].Trigger = 1;
+  }
+}
+
 void StripCommand::fadeToHSV(uint16_t H, uint16_t S, uint16_t V, uint16_t Delay)
 {
-  if (( CurrentMode != Fading && RunningFX) || (CurrentMode == Fading && !FadingDone)) return;
+  if ((CurrentMode != Fading && RunningFX) || (CurrentMode == Fading && !FadingDone))
+    return;
 
   Serial.println("Fading To HSV Received");
 

@@ -33,11 +33,13 @@ class StripCommand
 
     void dynamicStateUpdate();
     
+    void flash();
     void flash(uint16_t Id);
     void flash(uint16_t Id, uint16_t Offset);
     void groupFlash(uint8_t gr, uint8_t dir);
     void groupFlash(uint8_t gr);
     void groupFlash();
+    void flashAll();
 
     void fadeToHSV(uint16_t H, uint16_t S, uint16_t V, uint16_t Delay);
     void setToHSV(uint16_t H, uint16_t S, uint16_t V);
