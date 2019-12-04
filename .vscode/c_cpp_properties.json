@@ -5,14 +5,14 @@
       "includePath": [
         "src/**",
         "C:\\arduino-1.8.9\\hardware\\teensy\\avr\\cores\\teensy3",
-        "lib/FastLED/**",
-        "lib/Audio/**",
         "lib/ArduinoJson/**",
-        "lib/Wire/**",
-        "lib/SPI/**",
+        "lib/Audio/**",
+        "lib/FastLED/**",
+        "lib/IRremote/**",
         "lib/SD/**",
         "lib/SerialFlash/**",
-        "lib/IRremote/**"
+        "lib/SPI/**",
+        "lib/Wire/**"
       ],
       "forcedInclude": [],
       "defines": [

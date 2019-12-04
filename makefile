@@ -7,7 +7,7 @@
 # Optimize           Faster
 # Keyboard Layout    US English
 #
-# 04/12/2019 10:40
+# 04/12/2019 22:27
 #******************************************************************************
 SHELL            := cmd.exe
 export SHELL
@@ -17,11 +17,11 @@ BOARD_ID         := TEENSY31
 
 MCU              := mk20dx256
 
-LIBS_SHARED_BASE := C:\Users\adamiens\Documents\Arduino\libraries
+LIBS_SHARED_BASE := C:\Users\alexis\Documents\Arduino\libraries
 LIBS_SHARED      := 
 
 LIBS_LOCAL_BASE  := lib
-LIBS_LOCAL       := FastLED Audio ArduinoJson Wire SPI SD SerialFlash IRremote 
+LIBS_LOCAL       := ArduinoJson Audio FastLED IRremote SD SerialFlash SPI Wire 
 
 CORE_BASE        := C:\arduino-1.8.9\hardware\teensy\avr\cores\teensy3
 GCC_BASE         := C:\arduino-1.8.9\hardware\tools\arm\bin

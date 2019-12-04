@@ -63,7 +63,7 @@ ircmd getIRCmd();
 void IR_Management();
 void taskManager();
 void toggleRain();
-void startTHunder();
+void startThunder();
 
 
 uint8_t Brightness = 0;
@@ -89,9 +89,9 @@ void setup()
   IR.enableIRIn();
   init_Player();
 
-  T1.addEvent(100, SingleFlash);
+  T1.addEvent(100, MegaFlash);
   T1.addEvent(600, GroupFlash);
-  T1.addEvent(800, GroupFlash);
+  T1.addEvent(1000, SingleFlash);
 
 #ifdef DEBUG_MODE
   Serial.println("Successfully Initialized.");
@@ -113,6 +113,7 @@ void taskManager()
   if (RefreshOutputTimer >= OUTPUT_REFRESH_RATE)
   {
     RefreshOutputTimer = 0;
+    T1.Update();
     if (StripCommander.RunningFX)  //Update output only if necessary, RefreshOutputTimer is reset only if frame is displayed ==> As soon as one frame il
     {
       StripCommander.StateChanged = false;
@@ -155,7 +156,7 @@ void IR_Management()
 
     case Flash:
         Serial.println("Start Thunder");
-        startTHunder();
+        startThunder();
       break;
 
     case RPT:
@@ -242,7 +243,7 @@ void serialParse()
         i++;
       }
     }
-    while (Serial.available()) char a = Serial.read();
+    while (Serial.available()) Serial.read();
 
     JsonObject& root = jsonBuffer.parseObject(input);
     const char* method = root["method"];
@@ -296,7 +297,8 @@ void serialParse()
     }
     else if (strcmp(method, "thunder") == 0) //{method:thunder}
     {
-      startTHunder();
+      Serial.print("Trigering Thunder");
+      startThunder();
     }
     else
     {
@@ -318,7 +320,7 @@ void toggleRain()
       }
 }
 
-void startTHunder()
+void startThunder()
 {
   T1.trig(&ThunderCenter);
 }

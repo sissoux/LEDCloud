@@ -17,15 +17,26 @@ void Thunder::Update()
         {
             if (this->t >= this->Script[this->CurrentEvent].timestamp)
             {
+                Serial.print("Timestamp ");
+                Serial.println(t);
+
+                Serial.print("Event ");
+                Serial.println(this->CurrentEvent);
+
+                Serial.print("Event ID ");
+                Serial.println(this->Script[this->CurrentEvent].effect);
+
                 switch (this->Script[this->CurrentEvent].effect)
                 {
                 case SingleFlash:
+                {
                     uint8_t FlashCount = random(1, 15);
                     for (uint8_t i = 0; i <= FlashCount; i++)
                     {
                         this->StripCommander_p->flash();
                     }
-                    break;
+                }
+                break;
 
                 case GroupFlash:
                     this->StripCommander_p->groupFlash();
@@ -73,25 +84,28 @@ int Thunder::addEvent(uint32_t TimeStamp, FX effect)
                 {
                     if (TimeStamp < this->Script[numberOfEvents - 1].timestamp)
                     {
-                        for (int shiftIndex = numberOfEvents ; shiftIndex > index; shiftIndex--)
+                        for (int shiftIndex = numberOfEvents; shiftIndex > index; shiftIndex--)
                         {
-                            this->Script[shiftIndex].timestamp = this->Script[shiftIndex-1].timestamp;
-                            this->Script[shiftIndex].effect = this->Script[shiftIndex-1].effect;
+                            this->Script[shiftIndex].timestamp = this->Script[shiftIndex - 1].timestamp;
+                            this->Script[shiftIndex].effect = this->Script[shiftIndex - 1].effect;
                         }
                         this->Script[index] = {TimeStamp, effect};
                         break;
                     }
                 }
-                else 
-                {   //Timestamp is higher than all elements, add it at the end
+                else
+                { //Timestamp is higher than all elements, add it at the end
                     this->Script[numberOfEvents] = {TimeStamp, effect};
                 }
             }
         }
         else
-        {
-            numberOfEvents++;
+        { //Timestamp is higher than all elements, add it at the end
+            this->Script[numberOfEvents] = {TimeStamp, effect};
         }
+        numberOfEvents++;
+        Serial.print("Current number of events for T1: ");
+        Serial.println(numberOfEvents);
         return 1;
     }
     else

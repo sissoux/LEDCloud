@@ -14,14 +14,14 @@
       "copyCore": false,
       "sharedLibraries": [],
       "projectLibraries": [
-        "FastLED",
+        "ArduinoJson",
         "Audio",
-        "ArduinoJson-5.9.0.zip",
-        "Wire",
-        "SPI",
+        "FastLED",
+        "IRremote",
         "SD",
         "SerialFlash",
-        "IRremote"
+        "SPI",
+        "Wire"
       ],
       "board": {
         "name": "Teensy 3.2 / 3.1",
