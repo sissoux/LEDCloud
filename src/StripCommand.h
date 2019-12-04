@@ -14,6 +14,8 @@ class StripCommand
     CRGB leds[NUM_LEDS];
     boolean StateChanged = true;
     elapsedMillis tStrip = 0;
+    elapsedMillis RainbowTimer = 0;
+    uint32_t RainbowRate = 10; //ms
 
     LightMode CurrentMode = Flashing;
     boolean RunningFX = false;
@@ -25,6 +27,7 @@ class StripCommand
     CHSV TargetColor;
     CRGB GradientBuffer[MAX_TRANSIENT_STEPS];
     boolean FadingDone = true;
+    uint8_t CurrentRainbowStartingHue = 0;
 
     StripLED pixels[NUM_LEDS];
 
@@ -53,7 +56,7 @@ class StripCommand
     void rainbow(void);
 
 
-    void rainbow(uint8_t wait);
+    void rainbow(uint32_t rate);
     void colorWipe(uint32_t c, uint8_t wait);
     void rainbowCycle(uint8_t wait);
     void theaterChase(uint32_t c, uint8_t wait);

@@ -28,8 +28,8 @@ void StripCommand::dynamicStateUpdate()
     }
   }
   break;
+
   case Fading:
-  {
     if (!FadingDone)
     {
       RunningFX = true;
@@ -54,7 +54,19 @@ void StripCommand::dynamicStateUpdate()
         }
       }
     }
-  }
+    break;
+
+  case Rainbow:
+    if (RainbowTimer >= RainbowRate)
+    {
+      RainbowRate = 0;
+      CurrentRainbowStartingHue +=1;
+      this->rainbow();
+    }
+    break;
+
+  default:
+    break;
   }
 }
 
@@ -180,15 +192,12 @@ void StripCommand::fadeToHSV(uint16_t H, uint16_t S, uint16_t V, uint16_t Delay)
   Serial.println(RefreshRate);
 
   tStrip = 0;
-  Serial.println("Je passe là");
-#ifdef VERBOSE
   Serial.print("target H ");
   Serial.print(TargetColor.h);
   Serial.print(" starting H, ");
   Serial.print(StartingColor.h);
   Serial.print(" FadingDone ? ");
   Serial.println(FadingDone);
-#endif
 }
 
 void StripCommand::setToHSV(uint16_t H, uint16_t S, uint16_t V)
@@ -203,7 +212,6 @@ void StripCommand::fadeToRGB(uint8_t R, uint8_t G, uint8_t B, uint16_t Delay)
   fadeToHSV(myColor.h, myColor.s, myColor.v, Delay);
 }
 
-//{method:setToRGB,R:15,G:10,B:120}
 void StripCommand::setToRGB(uint8_t R, uint8_t G, uint8_t B)
 {
   fill_solid(leds, NUM_LEDS, CRGB(R, G, B));
@@ -212,6 +220,16 @@ void StripCommand::setToRGB(uint8_t R, uint8_t G, uint8_t B)
 
 void StripCommand::rainbow()
 {
-  fill_rainbow(leds, 56, 10, 5);
+  if (CurrentMode != Rainbow && RunningFX)
+  {
+    CurrentMode = Rainbow;
+  }
+  fill_rainbow(leds, 56, CurrentRainbowStartingHue, 5);
   StateChanged = true;
+}
+
+void StripCommand::rainbow(uint32_t rate)
+{
+  if (rate!=0) RainbowRate = rate;
+  rainbow();
 }
