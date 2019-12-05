@@ -14,6 +14,7 @@
 #include "Thunder.h"
 
 StripCommand StripCommander;
+//TEST BLA BLA BLA
 
 //Declare all thunder objects
 Thunder H1 = Thunder("HEAVY1.wav", &StripCommander);
