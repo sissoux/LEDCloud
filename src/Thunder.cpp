@@ -28,9 +28,18 @@ void Thunder::Update()
 
                 switch (this->Script[this->CurrentEvent].effect)
                 {
-                case SingleFlash:
+                case Flash:
                 {
                     uint8_t FlashCount = random(1, 15);
+                    for (uint8_t i = 0; i <= FlashCount; i++)
+                    {
+                        this->StripCommander_p->flash();
+                    }
+                }
+                break;
+                case BigFlash:
+                {
+                    uint8_t FlashCount = random(20, 35);
                     for (uint8_t i = 0; i <= FlashCount; i++)
                     {
                         this->StripCommander_p->flash();

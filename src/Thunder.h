@@ -11,14 +11,22 @@
 #define THUNDER_MAX_NUMBER_OF_EVENTS 15
 
 enum FX{
-  SingleFlash,
+  Flash,
+  BigFlash,
   GroupFlash,
   MegaFlash
 };
 
+enum ThunderType{
+  Distant, 
+  Medium, 
+  Heavy, 
+  VeryHeavy
+};
+
 struct Event{
   uint32_t timestamp = 0;
-  enum FX effect = SingleFlash;
+  enum FX effect = Flash;
 };
 
 class Thunder
@@ -31,6 +39,7 @@ class Thunder
 
     elapsedMillis t;
     const char* filename;
+    enum ThunderType Type;
     AudioPlaySdWav* AudioPlayer_p;
 
     StripCommand* StripCommander_p;
