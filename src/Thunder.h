@@ -11,7 +11,7 @@
 #define THUNDER_MAX_NUMBER_OF_EVENTS 15
 
 enum FX{
-  Flash,
+  SingleFlash,
   BigFlash,
   GroupFlash,
   MegaFlash
@@ -26,7 +26,7 @@ enum ThunderType{
 
 struct Event{
   uint32_t timestamp = 0;
-  enum FX effect = Flash;
+  enum FX effect = SingleFlash;
 };
 
 class Thunder
