@@ -14,26 +14,11 @@
 #include "Thunder.h"
 
 StripCommand StripCommander;
-//TEST BLA BLA BLA
-
-//Declare all thunder objects
-Thunder H1 = Thunder("HEAVY1.wav", &StripCommander);
-Thunder H2 = Thunder("HEAVY2.wav", &StripCommander);
-Thunder H3 = Thunder("HEAVY3.wav", &StripCommander);
-Thunder H4 = Thunder("HEAVY4.wav", &StripCommander);
-Thunder M1 = Thunder("MEDIUM1.wav", &StripCommander);
-Thunder M2 = Thunder("MEDIUM2.wav", &StripCommander);
-Thunder M3 = Thunder("MEDIUM3.wav", &StripCommander);
-Thunder D1 = Thunder("DISTANT1.wav", &StripCommander);
-Thunder D2 = Thunder("DISTANT2.wav", &StripCommander);
-Thunder D3 = Thunder("DISTANT3.wav", &StripCommander);
-Thunder D4 = Thunder("DISTANT4.wav", &StripCommander);
-Thunder D5 = Thunder("DISTANT5.wav", &StripCommander);
-Thunder VH = Thunder("VHEAVY1.wav", &StripCommander);
 
 //Declare an array of pointers to the thunder objects for random selection
-#define NUMBER_OF_THUNDERS 13
-Thunder *Thunders[NUMBER_OF_THUNDERS] = {&H1, &H2, &H3, &H4, &M1, &M2, &M3, &D1, &D2, &D3, &D4, &D5, &VH};
+#define MAX_NUMBER_OF_THUNDERS 30
+Thunder *Thunders[MAX_NUMBER_OF_THUNDERS];
+uint8_t NumberOfInitializedThunders = 0;
 #define NUMBER_OF_PLAYER 3
 
 elapsedMillis RefreshOutputTimer = 0;
@@ -52,9 +37,9 @@ AudioPlaySdWav ThunderLeft;   //xy=112,285
 AudioPlaySdWav ThunderRight;  //xy=114,336
 AudioPlaySdWav ThunderCenter; //xy=115,401
 AudioPlaySdWav *ThunderPLayers[NUMBER_OF_PLAYER] = {&ThunderRight, &ThunderLeft, &ThunderCenter};
-AudioMixer4 mixer1;           //xy=366,222
-AudioMixer4 mixer2;           //xy=367,300
-AudioOutputI2S i2s1;          //xy=569,260
+AudioMixer4 mixer1;  //xy=366,222
+AudioMixer4 mixer2;  //xy=367,300
+AudioOutputI2S i2s1; //xy=569,260
 AudioConnection patchCord1(Rain, 0, mixer1, 0);
 AudioConnection patchCord2(Rain, 1, mixer2, 0);
 AudioConnection patchCord3(ThunderLeft, 0, mixer1, 1);
@@ -125,7 +110,7 @@ void taskManager()
   if (RefreshOutputTimer >= OUTPUT_REFRESH_RATE)
   {
     RefreshOutputTimer = 0;
-    for (int T = 0; T < NUMBER_OF_THUNDERS; T++)
+    for (int T = 0; T < NumberOfInitializedThunders; T++)
     {
       Thunders[T]->Update();
     }
@@ -345,9 +330,9 @@ void startRandomThunder()
   uint8_t player = random8(3);
   AudioPlaySdWav *playerPointer = nullptr;
   //Select first available player starting from random position
-  for (uint8_t PlayerCounter = 0; PlayerCounter< NUMBER_OF_PLAYER; PlayerCounter++)
+  for (uint8_t PlayerCounter = 0; PlayerCounter < NUMBER_OF_PLAYER; PlayerCounter++)
   {
-    uint8_t SelectedPlayer = (PlayerCounter+player)%NUMBER_OF_PLAYER;
+    uint8_t SelectedPlayer = (PlayerCounter + player) % NUMBER_OF_PLAYER;
     if (!ThunderPLayers[SelectedPlayer]->isPlaying())
     {
       playerPointer = ThunderPLayers[SelectedPlayer];
@@ -355,44 +340,69 @@ void startRandomThunder()
     }
   }
   //Only trig thunder if we found an available player
-  if (playerPointer!=nullptr)
-  Thunders[random(0,NUMBER_OF_THUNDERS)]->trig(playerPointer);
+  if (playerPointer != nullptr)
+    Thunders[random(0, NumberOfInitializedThunders)]->trig(playerPointer);
 }
 
-void initThunders()
+void initThunders(Thunder *P_Thunder[])
 {
-  H1.addEvent(100, GroupFlash);
-  H1.addEvent(200, GroupFlash);
-  H1.addEvent(300, GroupFlash);
-  H2.addEvent(100, SingleFlash);
-  H2.addEvent(200, SingleFlash);
-  H2.addEvent(600, GroupFlash);
-  H3.addEvent(100, BigFlash);
-  H4.addEvent(500, SingleFlash);
-  H4.addEvent(1800, GroupFlash);
-  H4.addEvent(2000, GroupFlash);
+  //TODO : read thunder events from a file in SD Card (use JSON)
+  //File myFile = SD.open("test.txt", FILE_WRITE);
+  for (int i = 0; i < MAX_NUMBER_OF_THUNDERS; i++)
+  {
+    P_Thunder[i] = nullptr;
+  }
+  P_Thunder[0] = new Thunder("HEAVY1.wav", &StripCommander, Heavy);
+  P_Thunder[1] = new Thunder("HEAVY2.wav", &StripCommander, Heavy);
+  P_Thunder[2] = new Thunder("HEAVY3.wav", &StripCommander, Heavy);
+  P_Thunder[3] = new Thunder("HEAVY4.wav", &StripCommander, Heavy);
+  P_Thunder[4] = new Thunder("MEDIUM1.wav", &StripCommander, Medium);
+  P_Thunder[5] = new Thunder("MEDIUM2.wav", &StripCommander, Medium);
+  P_Thunder[6] = new Thunder("MEDIUM3.wav", &StripCommander, Medium);
+  P_Thunder[7] = new Thunder("DISTANT1.wav", &StripCommander, Distant);
+  P_Thunder[8] = new Thunder("DISTANT2.wav", &StripCommander, Distant);
+  P_Thunder[9] = new Thunder("DISTANT3.wav", &StripCommander, Distant);
+  P_Thunder[10] = new Thunder("DISTANT4.wav", &StripCommander, Distant);
+  P_Thunder[11] = new Thunder("DISTANT5.wav", &StripCommander, Distant);
+  P_Thunder[12] = new Thunder("VHEAVY1.wav", &StripCommander, VeryHeavy);
+  NumberOfInitializedThunders = 13;
+  
+  P_Thunder[0]->addEvent((Event[]){{100, GroupFlash}, {200, GroupFlash}, {200, GroupFlash}}, 3);
+  P_Thunder[1]->addEvent((Event[]){{100, SingleFlash}, {200, SingleFlash}, {600, GroupFlash}}, 3);
+  P_Thunder[2]->addEvent(100, BigFlash);
+  P_Thunder[3]->addEvent((Event[]){{500, SingleFlash}, {1800, GroupFlash}, {2000, GroupFlash}}, 3);
+/*
   M1.addEvent(400, BigFlash);
   M1.addEvent(2500, GroupFlash);
   M1.addEvent(3000, BigFlash);
+
   M2.addEvent(500, SingleFlash);
   M2.addEvent(900, BigFlash);
+
   M3.addEvent(100, BigFlash);
   M3.addEvent(600, GroupFlash);
+
   D1.addEvent(1000, SingleFlash);
   D1.addEvent(2500, GroupFlash);
   D1.addEvent(2800, BigFlash);
+
   D2.addEvent(100, SingleFlash);
+
   D3.addEvent(2000, SingleFlash);
   D3.addEvent(3000, GroupFlash);
+
   D4.addEvent(17000, SingleFlash);
   D4.addEvent(1800, SingleFlash);
   D4.addEvent(20000, GroupFlash);
   D4.addEvent(21000, BigFlash);
+
   D5.addEvent(0, BigFlash);
+
   VH.addEvent(800, SingleFlash);
   VH.addEvent(1100, MegaFlash);
   VH.addEvent(1500, SingleFlash);
   VH.addEvent(1800, SingleFlash);
   VH.addEvent(2000, SingleFlash);
   VH.addEvent(3500, SingleFlash);
+*/
 }

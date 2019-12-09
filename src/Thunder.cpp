@@ -1,9 +1,10 @@
 #include "Thunder.h"
 
-Thunder::Thunder(const char *FileName, StripCommand *_stripCommander)
+Thunder::Thunder(const char *FileName, StripCommand *_stripCommander, ThunderType _type)
 {
     this->filename = FileName;
     this->StripCommander_p = _stripCommander;
+    this->Type = _type;
 }
 
 void Thunder::Update()
@@ -119,4 +120,23 @@ int Thunder::addEvent(uint32_t TimeStamp, FX effect)
     }
     else
         return -1; //Return error, could not add event as list is already full
+}
+
+//Add a list of events to the event list, sort them so the timestamp is increasing.
+int Thunder::addEvent(Event eventlist[], uint8_t NumberOfEventToAdd)
+{
+    if ((this->numberOfEvents + NumberOfEventToAdd) < THUNDER_MAX_NUMBER_OF_EVENTS && sizeof(eventlist) == sizeof(Event)*NumberOfEventToAdd)
+    {
+        for (int event = 0; event < NumberOfEventToAdd; event++)
+        {
+            this->addEvent(eventlist[event].timestamp, eventlist[event].effect);
+        }
+    }
+    else
+        return -1; //Return error, could not add event as list is already full
+}
+
+void Thunder::purgeEventList()
+{
+    this->numberOfEvents = 0; //No need to delete the events, just pretend the list is empty
 }

@@ -46,8 +46,10 @@ class Thunder
 
 
     Thunder(void);
-    Thunder(const char* FileName, StripCommand*);
+    Thunder(const char* FileName, StripCommand*, ThunderType);
     int addEvent(uint32_t TimeStamp, FX effect);
+    int addEvent(Event eventlist[], uint8_t NumberOfEvents);
+    void purgeEventList();
     void Update();
     void trig(AudioPlaySdWav*);
 
