@@ -28,7 +28,6 @@ elapsedMillis IRRepeatTimeout = 0;
 
 boolean LastFrameShowed = true;
 
-DynamicJsonBuffer jsonBuffer;
 char input[100];
 
 // GUItool: begin automatically generated code
@@ -251,27 +250,29 @@ void serialParse()
     while (Serial.available())
       Serial.read();
 
-    JsonObject &root = jsonBuffer.parseObject(input);
-    const char *method = root["method"];
+    DynamicJsonDocument SerialJsonDoc(1024); //Arbritrary set to 1024, need to evaluate datacontracts to check the size
+    deserializeJson(SerialJsonDoc, input);
+
+    const char *method = SerialJsonDoc["method"];
     Serial.println(method);
     if (strcmp(method, "fadeToRGB") == 0)
     {
-      StripCommander.fadeToRGB(root["R"], root["G"], root["B"], root["Delay"]);
+      StripCommander.fadeToRGB(SerialJsonDoc["R"], SerialJsonDoc["G"], SerialJsonDoc["B"], SerialJsonDoc["Delay"]);
     }
     else if (strcmp(method, "fadeToHSV") == 0) //{method:fadeToHSV,H:160,S:255,V:255,Delay:2000}
     {
-      StripCommander.fadeToHSV(root["H"], root["S"], root["V"], root["Delay"]);
+      StripCommander.fadeToHSV(SerialJsonDoc["H"], SerialJsonDoc["S"], SerialJsonDoc["V"], SerialJsonDoc["Delay"]);
     }
     else if (strcmp(method, "setToRGB") == 0) //{method:setToRGB,R:255,G:100,B:0}
     {
       Serial.println("set to RGB value");
-      StripCommander.setToRGB(root["R"], root["G"], root["B"]);
+      StripCommander.setToRGB(SerialJsonDoc["R"], SerialJsonDoc["G"], SerialJsonDoc["B"]);
       LastFrameShowed = false;
     }
     else if (strcmp(method, "setToHSV") == 0) //{method:setToHSV,H:255,S:100,V:0}
     {
       Serial.println("set to HSV value");
-      StripCommander.setToHSV(root["H"], root["S"], root["V"]);
+      StripCommander.setToHSV(SerialJsonDoc["H"], SerialJsonDoc["S"], SerialJsonDoc["V"]);
       LastFrameShowed = false;
     }
     else if (strcmp(method, "rainbow") == 0) //{method:rainbow}
@@ -291,7 +292,7 @@ void serialParse()
     }
     else if (strcmp(method, "groupFlash") == 0) //{method:groupFlash,Group:0,Direction:1}
     {
-      StripCommander.groupFlash(root["Group"], root["Direction"]);
+      StripCommander.groupFlash(SerialJsonDoc["Group"], SerialJsonDoc["Direction"]);
     }
     else if (strcmp(method, "rdmGroupFlash") == 0) //{method:rdmGroupFlash}
     {
@@ -366,12 +367,12 @@ void initThunders(Thunder *P_Thunder[])
   P_Thunder[11] = new Thunder("DISTANT5.wav", &StripCommander, Distant);
   P_Thunder[12] = new Thunder("VHEAVY1.wav", &StripCommander, VeryHeavy);
   NumberOfInitializedThunders = 13;
-  
+/*
   P_Thunder[0]->addEvent((Event[]){{100, GroupFlash}, {200, GroupFlash}, {200, GroupFlash}}, 3);
   P_Thunder[1]->addEvent((Event[]){{100, SingleFlash}, {200, SingleFlash}, {600, GroupFlash}}, 3);
   P_Thunder[2]->addEvent(100, BigFlash);
   P_Thunder[3]->addEvent((Event[]){{500, SingleFlash}, {1800, GroupFlash}, {2000, GroupFlash}}, 3);
-/*
+  
   M1.addEvent(400, BigFlash);
   M1.addEvent(2500, GroupFlash);
   M1.addEvent(3000, BigFlash);
