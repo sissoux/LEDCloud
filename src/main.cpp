@@ -210,6 +210,8 @@ void init_Player()
 
 void serialParse()
 {
+  if (Serial.available())
+  {
     DynamicJsonDocument doc(200);
     deserializeJson(doc, Serial);
 
