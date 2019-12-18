@@ -28,7 +28,6 @@ elapsedMillis IRRepeatTimeout = 0;
 
 boolean LastFrameShowed = true;
 
-char input[1024];
 
 // GUItool: begin automatically generated code
 AudioPlaySdWav Rain;          //xy=102,155
@@ -211,25 +210,8 @@ void init_Player()
 
 void serialParse()
 {
-  if (Serial.available())
-  {
-    char lastChar = '\0';
-    int i = 0;
-
-    while (lastChar != '\r')
-    {
-      if (Serial.available())
-      {
-        lastChar = Serial.read();
-        input[i] = lastChar;
-        i++;
-      }
-    }
-    while (Serial.available())
-      Serial.read();
-
     DynamicJsonDocument doc(200);
-    deserializeJson(doc, input);
+    deserializeJson(doc, Serial);
 
     const char *command = doc["command"]; // "setToHSV"
 
