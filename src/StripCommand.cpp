@@ -37,7 +37,6 @@ void StripCommand::dynamicStateUpdate()
       {
         while (tStrip >= RefreshRate)
         {
-          Serial.println(GradientIndex);
           tStrip -= RefreshRate;
         }
         if (GradientIndex < 150)
@@ -105,7 +104,7 @@ void StripCommand::groupFlash(uint8_t gr, uint8_t dir)
 {
   if (CurrentMode != Flashing && RunningFX)
     return;
-  Serial.println("GroupFlash received");
+
   CurrentMode = Flashing;
   uint8_t spd = random(2, 25);
   uint16_t Multiplier = 0;
@@ -128,7 +127,7 @@ void StripCommand::groupFlash(uint8_t gr, uint8_t dir)
 
 void StripCommand::groupFlash(uint8_t gr)
 {
-  uint8_t dir = random(0, 2);
+  uint8_t dir = random(0, 1);
   groupFlash(gr, dir);
 }
 
@@ -152,58 +151,39 @@ void StripCommand::flashAll()
   }
 }
 
-void StripCommand::fadeToHSV(uint16_t H, uint16_t S, uint16_t V, uint16_t Delay)
+void StripCommand::fadeToHSV(uint8_t H, uint8_t S, uint8_t V, uint16_t Delay)
+{
+  fadeToHSV(CHSV(H, S, V), Delay);
+}
+
+void StripCommand::fadeToHSV(CHSV target, uint16_t Delay)
 {
   if ((CurrentMode != Fading && RunningFX) || (CurrentMode == Fading && !FadingDone))
     return;
 
-  Serial.println("Fading To HSV Received");
-
   CurrentMode = Fading;
   StartingColor = rgb2hsv_approximate(leds[0]);
-  TargetColor = CHSV(H, S, V);
+  TargetColor = target;
   FadingDelay = Delay;
   FadingDone = false;
 
-#ifdef VERBOSE
-  Serial.print("target H ");
-  Serial.print(TargetColor.h);
-  Serial.print(" starting H, ");
-  Serial.print(StartingColor.h);
-  Serial.print(" FadingDone ? ");
-  Serial.println(FadingDone);
-#endif
 
   RefreshRate = FadingDelay / MAX_TRANSIENT_STEPS;
   fill_gradient(GradientBuffer, 0, StartingColor, MAX_TRANSIENT_STEPS - 1, TargetColor);
-  for (int x = 0; x < MAX_TRANSIENT_STEPS; x++)
-  {
-    Serial.print(" Buffer ");
-    Serial.print(x);
-    Serial.print(" R = ");
-    Serial.print(GradientBuffer[x].r);
-    Serial.print(" G = ");
-    Serial.print(GradientBuffer[x].g);
-    Serial.print(" B = ");
-    Serial.println(GradientBuffer[x].b);
-  }
   GradientIndex = 0;
-  Serial.print("Refresh rate ");
-  Serial.println(RefreshRate);
-
   tStrip = 0;
-  Serial.print("target H ");
-  Serial.print(TargetColor.h);
-  Serial.print(" starting H, ");
-  Serial.print(StartingColor.h);
-  Serial.print(" FadingDone ? ");
-  Serial.println(FadingDone);
+  
 }
 
-void StripCommand::setToHSV(uint16_t H, uint16_t S, uint16_t V)
+void StripCommand::setToHSV(CHSV target)
 {
-  fill_solid(leds, NUM_LEDS, CHSV(H, S, V));
+  fill_solid(leds, NUM_LEDS, target);
   StateChanged = true;
+}
+
+void StripCommand::setToHSV(uint8_t H, uint8_t S, uint8_t V)
+{
+  setToHSV(CHSV(H, S, V));
 }
 
 void StripCommand::fadeToRGB(uint8_t R, uint8_t G, uint8_t B, uint16_t Delay)

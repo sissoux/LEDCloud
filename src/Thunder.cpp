@@ -18,15 +18,6 @@ void Thunder::Update()
         {
             if (this->t >= this->Script[this->CurrentEvent].timestamp)
             {
-                Serial.print("Timestamp ");
-                Serial.println(t);
-
-                Serial.print("Event ");
-                Serial.println(this->CurrentEvent);
-
-                Serial.print("Event ID ");
-                Serial.println(this->Script[this->CurrentEvent].effect);
-
                 switch (this->Script[this->CurrentEvent].effect)
                 {
                 case SingleFlash:
@@ -114,8 +105,6 @@ int Thunder::addEvent(uint32_t TimeStamp, FX effect)
             this->Script[numberOfEvents] = {TimeStamp, effect};
         }
         numberOfEvents++;
-        Serial.print("Current number of events for T1: ");
-        Serial.println(numberOfEvents);
         return 1;
     }
     else

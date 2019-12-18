@@ -8,7 +8,7 @@
 #include "StripCommand.h"
 #include "Audio.h"
 
-#define THUNDER_MAX_NUMBER_OF_EVENTS 15
+
 
 enum FX{
   SingleFlash,

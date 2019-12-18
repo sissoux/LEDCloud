@@ -26,19 +26,6 @@ CRGB StripLED::update()
       SumTFall = SumTHigh + TFall;
       UpStep = 100 * MaxBrightness / TRise;
       DownStep = 100 * MaxBrightness / TFall;
-#ifdef VERBOSE
-      Serial.print("LED ");
-      Serial.print(this->ID);
-      Serial.print(" Trigger received, ");
-      Serial.print("Offset = ");
-      Serial.print(this->Offset);
-      Serial.print("TR = ");
-      Serial.print(this->TRise);
-      Serial.print(", TH = ");
-      Serial.print(this->THigh);
-      Serial.print(", TF = ");
-      Serial.println(this->TFall);
-#endif
     }
     t = 0;
   }

@@ -16,7 +16,7 @@
 StripCommand StripCommander;
 
 //Declare an array of pointers to the thunder objects for random selection
-#define MAX_NUMBER_OF_THUNDERS 30
+
 Thunder *Thunders[MAX_NUMBER_OF_THUNDERS];
 uint8_t NumberOfInitializedThunders = 0;
 #define NUMBER_OF_PLAYER 3
@@ -28,7 +28,7 @@ elapsedMillis IRRepeatTimeout = 0;
 
 boolean LastFrameShowed = true;
 
-char input[100];
+char input[1024];
 
 // GUItool: begin automatically generated code
 AudioPlaySdWav Rain;          //xy=102,155
@@ -65,11 +65,14 @@ void taskManager();
 void toggleRain();
 void startRandomThunder();
 void initThunders();
+void WriteColorFile(CHSV ColorTable[], int NumberOfColors);
+void ParseColorFile(CHSV ColorTable[], int NumberOfColors);
 
 uint8_t Brightness = 0;
 
 void setup()
 {
+  ParseColorFile(IRColorMap, 20);
   FastLED.addLeds<NEOPIXEL, 2>(StripCommander.leds, 0, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 3>(StripCommander.leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
   FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
@@ -81,17 +84,10 @@ void setup()
     ;
 #endif
 
-#ifdef DEBUG_MODE
-  Serial.println("Port Opened.");
-  Serial.println("Initializing");
-#endif
   StripCommander.begin();
   IR.enableIRIn();
   init_Player();
 
-#ifdef DEBUG_MODE
-  Serial.println("Successfully Initialized.");
-#endif
   FastLED.show(); //Clear all LEDs
 }
 
@@ -129,85 +125,67 @@ void taskManager()
 
 void IR_Management()
 {
-  switch (getIRCmd())
+  ircmd cmd = getIRCmd();
+  if (IRCmdMap[cmd] != 0)
   {
-  case Ip:
-    Serial.println("Intensity +");
-    Brightness = constrain(Brightness + 10, 0, 255);
-    IRRepeatTimeout = 0;
-    LastIRCmd = Ip;
-    break;
-
-  case Im:
-    Serial.println("Intensity -");
-    Brightness = constrain(Brightness - 10, 0, 255);
-    IRRepeatTimeout = 0;
-    LastIRCmd = Im;
-    break;
-
-  case Play:
-    toggleRain();
-    break;
-
-  case Ca:
-    StripCommander.fadeToHSV(10, 255, 255, 1500);
-    break;
-
-  case Flash:
-    Serial.println("Start Thunder");
-    startRandomThunder();
-    break;
-
-  case RPT:
-    Serial.println("Repeat");
-    if (IRRepeatTimeout < IR_REPEAT_TIMEOUT)
+    StripCommander.setToHSV(IRColorMap[IRCmdMap[cmd]]);
+  }
+  else
+  {
+    switch (cmd)
     {
-      switch (LastIRCmd)
-      {
-      case Ip:
-        Brightness = constrain(Brightness + 1, 0, 255);
-        break;
-      case Im:
-        Brightness = constrain(Brightness - 1, 0, 255);
-        break;
-      default:
-        break;
-      }
+    case Ip:
+      Serial.println("Intensity +");
+      Brightness = constrain(Brightness + 10, 0, 255);
       IRRepeatTimeout = 0;
-    }
-    else
-      LastIRCmd = NO_CMD;
-    break;
+      LastIRCmd = Ip;
+      break;
 
-  default:
-    break;
-  }
-}
+    case Im:
+      Serial.println("Intensity -");
+      Brightness = constrain(Brightness - 10, 0, 255);
+      IRRepeatTimeout = 0;
+      LastIRCmd = Im;
+      break;
 
-ircmd getIRCmd()
-{
-  if (IR.decode(&RawIRCmd))
-  {
-    if ((RawIRCmd.value == 0xFFFFFFFF))
-    {
-      IR.resume();
-      return RPT;
-    }
-    else
-    {
-      for (int i = 0; i < NB_IR_CMD; i++)
+    case Play:
+      toggleRain();
+      break;
+
+    case Ca:
+      StripCommander.fadeToHSV(10, 255, 255, 1500);
+      break;
+
+    case Flash:
+      Serial.println("Start Thunder");
+      startRandomThunder();
+      break;
+
+    case RPT:
+      Serial.println("Repeat");
+      if (IRRepeatTimeout < IR_REPEAT_TIMEOUT)
       {
-        //Serial.println(RawIRCmd.value & 0x00FFFF, HEX);
-        if ((RawIRCmd.value & 0x00FFFF) == IRcmdCommands[i])
+        switch (LastIRCmd)
         {
-          IR.resume();
-          return (ircmd)i;
+        case Ip:
+          Brightness = constrain(Brightness + 1, 0, 255);
+          break;
+        case Im:
+          Brightness = constrain(Brightness - 1, 0, 255);
+          break;
+        default:
+          break;
         }
+        IRRepeatTimeout = 0;
       }
-      IR.resume();
+      else
+        LastIRCmd = NO_CMD;
+      break;
+
+    default:
+      break;
     }
   }
-  return NO_CMD;
 }
 
 void init_Player()
@@ -250,66 +228,81 @@ void serialParse()
     while (Serial.available())
       Serial.read();
 
-    DynamicJsonDocument SerialJsonDoc(1024); //Arbritrary set to 1024, need to evaluate datacontracts to check the size
-    deserializeJson(SerialJsonDoc, input);
+    DynamicJsonDocument doc(200);
+    deserializeJson(doc, input);
 
-    const char *method = SerialJsonDoc["method"];
-    Serial.println(method);
-    if (strcmp(method, "fadeToRGB") == 0)
+    const char *command = doc["command"]; // "setToHSV"
+
+    if (strcmp(command, "fadeToHSV") == 0) //{command:fadeToHSV,H:160,S:255,V:255,Delay:2000}
     {
-      StripCommander.fadeToRGB(SerialJsonDoc["R"], SerialJsonDoc["G"], SerialJsonDoc["B"], SerialJsonDoc["Delay"]);
+      int Delay = doc["Delay"]; // 0
+      uint8_t H = doc["H"];         // 0
+      uint8_t S = doc["S"];         // 1
+      uint8_t V = doc["V"];         // 1
+      StripCommander.fadeToHSV(H, S, V, Delay);
     }
-    else if (strcmp(method, "fadeToHSV") == 0) //{method:fadeToHSV,H:160,S:255,V:255,Delay:2000}
+    else if (strcmp(command, "setToHSV") == 0) //{command:setToHSV,H:255,S:100,V:0}
     {
-      StripCommander.fadeToHSV(SerialJsonDoc["H"], SerialJsonDoc["S"], SerialJsonDoc["V"], SerialJsonDoc["Delay"]);
-    }
-    else if (strcmp(method, "setToRGB") == 0) //{method:setToRGB,R:255,G:100,B:0}
-    {
-      Serial.println("set to RGB value");
-      StripCommander.setToRGB(SerialJsonDoc["R"], SerialJsonDoc["G"], SerialJsonDoc["B"]);
+      uint8_t H = doc["H"]; // 0
+      uint8_t S = doc["S"]; // 1
+      uint8_t V = doc["V"]; // 1
+      StripCommander.setToHSV(H, S, V);
       LastFrameShowed = false;
     }
-    else if (strcmp(method, "setToHSV") == 0) //{method:setToHSV,H:255,S:100,V:0}
+    else if (strcmp(command, "attributeColor") == 0) //{command:setToHSV,H:255,S:100,V:0}
     {
-      Serial.println("set to HSV value");
-      StripCommander.setToHSV(SerialJsonDoc["H"], SerialJsonDoc["S"], SerialJsonDoc["V"]);
+      uint8_t H = doc["H"]; // 0
+      uint8_t S = doc["S"]; // 1
+      uint8_t V = doc["V"]; // 1
+      int buttonID = doc["ButtonID"];
+      StripCommander.setToHSV(H, S, V);
+      IRColorMap[buttonID] = CHSV(H, S, V);
       LastFrameShowed = false;
     }
-    else if (strcmp(method, "rainbow") == 0) //{method:rainbow}
+    else if (strcmp(command, "rainbow") == 0) //{command:rainbow}
     {
-      Serial.println("Rainbow");
       StripCommander.rainbow();
       LastFrameShowed = false;
     }
-    else if (strcmp(method, "flash") == 0)
+    else if (strcmp(command, "SingleFlash") == 0) //{command:SingleFlash}
     {
-      Serial.println("Flash"); //{method:flash}
       uint8_t FlashCount = random(1, 15);
       for (uint8_t i = 0; i <= FlashCount; i++)
       {
-        StripCommander.flash(random(0, NUM_LEDS));
+        StripCommander.flash();
       }
     }
-    else if (strcmp(method, "groupFlash") == 0) //{method:groupFlash,Group:0,Direction:1}
+    else if (strcmp(command, "BigFlash") == 0) //{command:GroupFlash}
     {
-      StripCommander.groupFlash(SerialJsonDoc["Group"], SerialJsonDoc["Direction"]);
+      uint8_t FlashCount = random(20, 35);
+      for (uint8_t i = 0; i <= FlashCount; i++)
+      {
+        StripCommander.flash();
+      }
     }
-    else if (strcmp(method, "rdmGroupFlash") == 0) //{method:rdmGroupFlash}
+    else if (strcmp(command, "GroupFlash") == 0) //{command:GroupFlash}
     {
       StripCommander.groupFlash();
     }
-    else if (strcmp(method, "rain") == 0) //{method:rain}
+    else if (strcmp(command, "MegaFlash") == 0) //{command:GroupFlash}
+    {
+      StripCommander.flashAll();
+    }
+    else if (strcmp(command, "rain") == 0) //{command:rain}
     {
       toggleRain();
     }
-    else if (strcmp(method, "thunder") == 0) //{method:thunder}
+    else if (strcmp(command, "saveColors") == 0) //{command:rain}
     {
-      Serial.print("Trigering Thunder");
+      WriteColorFile(IRColorMap, 20);
+    }
+    else if (strcmp(command, "thunder") == 0) //{command:thunder}
+    {
       startRandomThunder();
     }
     else
     {
-      Serial.println("ca ne marche pas ^^");
+      Serial.println("Unsuported command.");
     }
   }
 }
@@ -367,43 +360,82 @@ void initThunders(Thunder *P_Thunder[])
   P_Thunder[11] = new Thunder("DISTANT5.wav", &StripCommander, Distant);
   P_Thunder[12] = new Thunder("VHEAVY1.wav", &StripCommander, VeryHeavy);
   NumberOfInitializedThunders = 13;
-/*
-  P_Thunder[0]->addEvent((Event[]){{100, GroupFlash}, {200, GroupFlash}, {200, GroupFlash}}, 3);
-  P_Thunder[1]->addEvent((Event[]){{100, SingleFlash}, {200, SingleFlash}, {600, GroupFlash}}, 3);
-  P_Thunder[2]->addEvent(100, BigFlash);
-  P_Thunder[3]->addEvent((Event[]){{500, SingleFlash}, {1800, GroupFlash}, {2000, GroupFlash}}, 3);
-  
-  M1.addEvent(400, BigFlash);
-  M1.addEvent(2500, GroupFlash);
-  M1.addEvent(3000, BigFlash);
+}
 
-  M2.addEvent(500, SingleFlash);
-  M2.addEvent(900, BigFlash);
+ircmd getIRCmd()
+{
+  if (IR.decode(&RawIRCmd))
+  {
+    if ((RawIRCmd.value == 0xFFFFFFFF))
+    {
+      IR.resume();
+      return RPT;
+    }
+    else
+    {
+      for (int i = 0; i < NB_IR_CMD; i++)
+      {
+        //Serial.println(RawIRCmd.value & 0x00FFFF, HEX);
+        if ((RawIRCmd.value & 0x00FFFF) == IRcmdCommands[i])
+        {
+          IR.resume();
+          return (ircmd)i;
+        }
+      }
+      IR.resume();
+    }
+  }
+  return NO_CMD;
+}
 
-  M3.addEvent(100, BigFlash);
-  M3.addEvent(600, GroupFlash);
+void ParseColorFile(CHSV ColorTable[], int NumberOfColors)
+{
+  //Check if path is valid. If not return without loading black colors;
+  if (SD.exists("Colors.txt"))
+  {
+    File myFile = SD.open("Colors.txt");
+    if (myFile)
+    {
+      const size_t capacity = JSON_ARRAY_SIZE(20) + 20 * JSON_OBJECT_SIZE(3) + 140;
+      DynamicJsonDocument JsonDoc(capacity);
+      DeserializationError error = deserializeJson(JsonDoc, myFile);
+      JsonArray arr = JsonDoc.as<JsonArray>();
+      if (!error)
+      {
 
-  D1.addEvent(1000, SingleFlash);
-  D1.addEvent(2500, GroupFlash);
-  D1.addEvent(2800, BigFlash);
+        if (arr.size() >= NumberOfColors)
+        {
+          for (int i = 0; i < NumberOfColors; i++)
+          {
+            JsonObject root_0 = JsonDoc[i];
+            ColorTable[i].h = root_0["H"];
+            ColorTable[i].s = root_0["S"];
+            ColorTable[i].v = root_0["V"];
+          }
+        }
+        return;
+      }
+    }
+  }
 
-  D2.addEvent(100, SingleFlash);
+  for (int i = 0; i < NumberOfColors; i++)
+  {
+    ColorTable[i] = CHSV(0, 0, 0);
+  }
+}
+void WriteColorFile(CHSV ColorTable[], int NumberOfColors)
+{
+  const size_t capacity = JSON_ARRAY_SIZE(NumberOfColors) + 20 * JSON_OBJECT_SIZE(3);
+  DynamicJsonDocument JsonDoc(capacity);
 
-  D3.addEvent(2000, SingleFlash);
-  D3.addEvent(3000, GroupFlash);
-
-  D4.addEvent(17000, SingleFlash);
-  D4.addEvent(1800, SingleFlash);
-  D4.addEvent(20000, GroupFlash);
-  D4.addEvent(21000, BigFlash);
-
-  D5.addEvent(0, BigFlash);
-
-  VH.addEvent(800, SingleFlash);
-  VH.addEvent(1100, MegaFlash);
-  VH.addEvent(1500, SingleFlash);
-  VH.addEvent(1800, SingleFlash);
-  VH.addEvent(2000, SingleFlash);
-  VH.addEvent(3500, SingleFlash);
-*/
+  for (int i = 0; i < NumberOfColors; i++)
+  {
+    JsonObject tempJsonObj = JsonDoc.createNestedObject();
+    tempJsonObj["H"] = ColorTable[i].h;
+    tempJsonObj["S"] = ColorTable[i].s;
+    tempJsonObj["V"] = ColorTable[i].v;
+  }
+  File file = SD.open("Colors.txt", FILE_WRITE);
+  serializeJson(JsonDoc, file);
+  file.close();
 }

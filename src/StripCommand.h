@@ -44,8 +44,10 @@ class StripCommand
     void groupFlash();
     void flashAll();
 
-    void fadeToHSV(uint16_t H, uint16_t S, uint16_t V, uint16_t Delay);
-    void setToHSV(uint16_t H, uint16_t S, uint16_t V);
+    void fadeToHSV(uint8_t H, uint8_t S, uint8_t V, uint16_t Delay);
+    void setToHSV(uint8_t H, uint8_t S, uint8_t V);
+    void fadeToHSV(CHSV target, uint16_t Delay);
+    void setToHSV(CHSV target);
     void fadeToRGB(uint8_t R, uint8_t G, uint8_t B, uint16_t Delay);
     void setToRGB(uint8_t R, uint8_t G, uint8_t B);
 

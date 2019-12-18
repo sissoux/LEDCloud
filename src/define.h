@@ -13,4 +13,7 @@
 #define NUM_GROUPS 6
 #define MAX_TRANSIENT_STEPS 150 // Gives max transition time 5 seconds at 30 update per seconds
 
+#define THUNDER_MAX_NUMBER_OF_EVENTS 10
+#define MAX_NUMBER_OF_THUNDERS 30
+
 #endif
