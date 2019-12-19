@@ -28,7 +28,6 @@ elapsedMillis IRRepeatTimeout = 0;
 
 boolean LastFrameShowed = true;
 
-
 // GUItool: begin automatically generated code
 AudioPlaySdWav Rain;          //xy=102,155
 AudioPlaySdWav ThunderLeft;   //xy=112,285
@@ -57,6 +56,7 @@ AudioControlSGTL5000 sgtl5000_1; //xy=424,498
 
 //// Prototypes ////
 void serialParse();
+void init_SD();
 void init_Player();
 ircmd getIRCmd();
 void IR_Management();
@@ -71,23 +71,25 @@ uint8_t Brightness = 0;
 
 void setup()
 {
-  ParseColorFile(IRColorMap, 20);
-  FastLED.addLeds<NEOPIXEL, 2>(StripCommander.leds, 0, NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 3>(StripCommander.leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-  FastLED.addLeds<NEOPIXEL, 5>(StripCommander.leds, 3 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-  initThunders();
   Serial.begin(115200);
 #ifdef DEBUG_MODE
   while (!Serial)
     ;
 #endif
+  init_SD();
+  init_Player();
+  ParseColorFile(IRColorMap, 20);
+
+  FastLED.addLeds<NEOPIXEL, 2>(StripCommander.leds, 0 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 3>(StripCommander.leds, 1 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 4>(StripCommander.leds, 2 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
+  FastLED.addLeds<NEOPIXEL, 5>(StripCommander.leds, 3 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
+  initThunders();
 
   StripCommander.begin();
-  IR.enableIRIn();
-  init_Player();
 
   FastLED.show(); //Clear all LEDs
+  IR.enableIRIn();
 }
 
 void loop()
@@ -97,9 +99,8 @@ void loop()
 
 void taskManager()
 {
-  IR_Management();
-
   serialParse();
+  IR_Management();
 
   if (RefreshOutputTimer >= OUTPUT_REFRESH_RATE)
   {
@@ -108,6 +109,7 @@ void taskManager()
     {
       Thunders[T]->Update();
     }
+    StripCommander.dynamicStateUpdate();
     if (StripCommander.RunningFX) //Update output only if necessary, RefreshOutputTimer is reset only if frame is displayed ==> As soon as one frame il
     {
       StripCommander.StateChanged = false;
@@ -118,7 +120,6 @@ void taskManager()
       LastFrameShowed = true;
       FastLED.show();
     }
-    StripCommander.dynamicStateUpdate();
   }
 }
 
@@ -187,25 +188,27 @@ void IR_Management()
   }
 }
 
-void init_Player()
+void init_SD()
 {
-  // Audio connections require memory to work.  For more
-  // detailed information, see the MemoryAndCpuUsage example
-  AudioMemory(8);
-  sgtl5000_1.enable();
-  sgtl5000_1.volume(0.5);
-
   SPI.setMOSI(SDCARD_MOSI_PIN);
   SPI.setSCK(SDCARD_SCK_PIN);
   if (!(SD.begin(SDCARD_CS_PIN)))
   {
-    // stop here, but print a message repetitively
     while (1)
     {
       Serial.println("Unable to access the SD card");
       delay(500);
     }
   }
+}
+
+void init_Player()
+{
+  // Audio connections require memory to work.  For more
+  // detailed information, see the MemoryAndCpuUsage example
+  AudioMemory(10);
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(0.5);
 }
 
 void serialParse()
@@ -220,9 +223,9 @@ void serialParse()
     if (strcmp(command, "fadeToHSV") == 0) //{command:fadeToHSV,H:160,S:255,V:255,Delay:2000}
     {
       int Delay = doc["Delay"]; // 0
-      uint8_t H = doc["H"];         // 0
-      uint8_t S = doc["S"];         // 1
-      uint8_t V = doc["V"];         // 1
+      uint8_t H = doc["H"];     // 0
+      uint8_t S = doc["S"];     // 1
+      uint8_t V = doc["V"];     // 1
       StripCommander.fadeToHSV(H, S, V, Delay);
     }
     else if (strcmp(command, "setToHSV") == 0) //{command:setToHSV,H:255,S:100,V:0}
@@ -326,24 +329,57 @@ void initThunders(Thunder *P_Thunder[])
 {
   //TODO : read thunder events from a file in SD Card (use JSON)
   //File myFile = SD.open("test.txt", FILE_WRITE);
-  for (int i = 0; i < MAX_NUMBER_OF_THUNDERS; i++)
+  //Check if path is valid. If not return without loading black colors;
+  if (SD.exists("Thunders.txt"))
   {
-    P_Thunder[i] = nullptr;
+    File myFile = SD.open("Thunders.txt");
+    if (myFile)
+    {
+      DynamicJsonDocument JsonDoc(20000);
+      DeserializationError error = deserializeJson(JsonDoc, myFile);
+      if (!error)
+      {
+        //If parse is successfull, clear current thunder list and place parsed events.
+        NumberOfInitializedThunders = 0;
+        JsonArray arr = JsonDoc.as<JsonArray>();
+        int NumberOfThundersToAdd = arr.size();
+        for (int currentThunder = 0; currentThunder < NumberOfThundersToAdd; currentThunder++)
+        {
+          JsonObject ThunderToAdd = JsonDoc[currentThunder];
+          const char *ObjectType = ThunderToAdd["__type"]; // "Thunder"
+          // Check if type is correct, File exists on SD and we do not overflow Thunder list, then create Thunder instance
+          if (strcmp(ObjectType, "Thunder") == 1)
+          {
+            const char*  filename = ThunderToAdd["filename"];
+            if (SD.exists(filename) && NumberOfInitializedThunders < MAX_NUMBER_OF_THUNDERS)
+            {
+              int thunder_type = ThunderToAdd["Type"];
+              P_Thunder[NumberOfInitializedThunders] = new Thunder(filename, &StripCommander, (ThunderType)thunder_type);
+
+              //For each event in the script array, add it to the fresh Thunder instance
+              JsonArray Script = ThunderToAdd["Script"];
+              for (int ScriptIndex = 0; ScriptIndex < ThunderToAdd["NumberOfEvents"]; ScriptIndex++)
+              {
+                int thunder_fx = Script[ScriptIndex]["fX"];
+                P_Thunder[NumberOfInitializedThunders]->addEvent(Script[ScriptIndex]["timestamp"], (FX)thunder_fx);
+              }
+              NumberOfInitializedThunders++;
+            }
+            else
+            {
+              Serial.print("Wave file ");
+              Serial.print(filename);
+              Serial.println(" does not exist on SD card or max number of event reached.");
+            }
+          }
+        }
+      }
+    }
   }
-  P_Thunder[0] = new Thunder("HEAVY1.wav", &StripCommander, Heavy);
-  P_Thunder[1] = new Thunder("HEAVY2.wav", &StripCommander, Heavy);
-  P_Thunder[2] = new Thunder("HEAVY3.wav", &StripCommander, Heavy);
-  P_Thunder[3] = new Thunder("HEAVY4.wav", &StripCommander, Heavy);
-  P_Thunder[4] = new Thunder("MEDIUM1.wav", &StripCommander, Medium);
-  P_Thunder[5] = new Thunder("MEDIUM2.wav", &StripCommander, Medium);
-  P_Thunder[6] = new Thunder("MEDIUM3.wav", &StripCommander, Medium);
-  P_Thunder[7] = new Thunder("DISTANT1.wav", &StripCommander, Distant);
-  P_Thunder[8] = new Thunder("DISTANT2.wav", &StripCommander, Distant);
-  P_Thunder[9] = new Thunder("DISTANT3.wav", &StripCommander, Distant);
-  P_Thunder[10] = new Thunder("DISTANT4.wav", &StripCommander, Distant);
-  P_Thunder[11] = new Thunder("DISTANT5.wav", &StripCommander, Distant);
-  P_Thunder[12] = new Thunder("VHEAVY1.wav", &StripCommander, VeryHeavy);
-  NumberOfInitializedThunders = 13;
+  else
+  {
+    Serial.println("Thunder definition file does not exist on SD card or max number of event reached.");
+  }
 }
 
 ircmd getIRCmd()

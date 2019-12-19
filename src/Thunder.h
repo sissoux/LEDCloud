@@ -11,17 +11,17 @@
 
 
 enum FX{
-  SingleFlash,
-  BigFlash,
-  GroupFlash,
-  MegaFlash
+  SingleFlash = 1,
+  BigFlash = 2,
+  GroupFlash = 3,
+  MegaFlash = 4
 };
 
 enum ThunderType{
-  Distant, 
-  Medium, 
-  Heavy, 
-  VeryHeavy
+  Distant = 1, 
+  Medium = 2, 
+  Heavy = 3, 
+  VeryHeavy = 4
 };
 
 struct Event{
