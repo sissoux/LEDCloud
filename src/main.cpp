@@ -325,7 +325,7 @@ void startRandomThunder()
     Thunders[random(0, NumberOfInitializedThunders)]->trig(playerPointer);
 }
 
-void initThunders(Thunder *P_Thunder[])
+void initThunders()
 {
   //TODO : read thunder events from a file in SD Card (use JSON)
   //File myFile = SD.open("test.txt", FILE_WRITE);
@@ -350,18 +350,18 @@ void initThunders(Thunder *P_Thunder[])
           // Check if type is correct, File exists on SD and we do not overflow Thunder list, then create Thunder instance
           if (strcmp(ObjectType, "Thunder") == 1)
           {
-            const char*  filename = ThunderToAdd["filename"];
+            const char *filename = ThunderToAdd["filename"];
             if (SD.exists(filename) && NumberOfInitializedThunders < MAX_NUMBER_OF_THUNDERS)
             {
               int thunder_type = ThunderToAdd["Type"];
-              P_Thunder[NumberOfInitializedThunders] = new Thunder(filename, &StripCommander, (ThunderType)thunder_type);
+              Thunders[NumberOfInitializedThunders] = new Thunder(filename, &StripCommander, (ThunderType)thunder_type);
 
               //For each event in the script array, add it to the fresh Thunder instance
               JsonArray Script = ThunderToAdd["Script"];
               for (int ScriptIndex = 0; ScriptIndex < ThunderToAdd["NumberOfEvents"]; ScriptIndex++)
               {
                 int thunder_fx = Script[ScriptIndex]["fX"];
-                P_Thunder[NumberOfInitializedThunders]->addEvent(Script[ScriptIndex]["timestamp"], (FX)thunder_fx);
+                Thunders[NumberOfInitializedThunders]->addEvent(Script[ScriptIndex]["timestamp"], (FX)thunder_fx);
               }
               NumberOfInitializedThunders++;
             }
@@ -372,7 +372,16 @@ void initThunders(Thunder *P_Thunder[])
               Serial.println(" does not exist on SD card or max number of event reached.");
             }
           }
+          else
+          {
+            Serial.println("Content of Object is not Thunder");
+          }
         }
+      }
+      else
+      {
+        Serial.print("deserializeJson() failed: ");
+        Serial.println(error.c_str());
       }
     }
   }
