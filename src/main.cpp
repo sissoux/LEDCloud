@@ -26,6 +26,8 @@ elapsedMillis RefreshOutputTimer = 0;
 elapsedMillis IRRepeatTimeout = 0;
 #define IR_REPEAT_TIMEOUT 200
 
+//#define DEBUG_MODE
+
 boolean LastFrameShowed = true;
 
 // GUItool: begin automatically generated code
@@ -76,6 +78,7 @@ void setup()
   while (!Serial)
     ;
 #endif
+Serial.println("Welcome to LEDCLOUD");
   init_SD();
   init_Player();
   ParseColorFile(IRColorMap, 20);
