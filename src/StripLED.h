@@ -9,6 +9,7 @@
 typedef enum{
   Flashing,
   Fading,
+  Static,
   Rainbow,
   Standby
 } LightMode;

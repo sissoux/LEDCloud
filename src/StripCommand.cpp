@@ -54,6 +54,9 @@ void StripCommand::dynamicStateUpdate()
       }
     }
     break;
+  case Static:
+    
+    break;
 
   case Rainbow:
     if (RainbowTimer >= RainbowRate)
@@ -177,6 +180,10 @@ void StripCommand::fadeToHSV(CHSV target, uint16_t Delay)
 
 void StripCommand::setToHSV(CHSV target)
 {
+  if ((CurrentMode != Fading && RunningFX) || (CurrentMode == Fading && !FadingDone))
+    return;
+    
+  CurrentMode = Standby;
   fill_solid(leds, NUM_LEDS, target);
   StateChanged = true;
 }

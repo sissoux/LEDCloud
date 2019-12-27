@@ -15,6 +15,7 @@
 
 StripCommand StripCommander;
 
+#define VERSION "0.01"
 //Declare an array of pointers to the thunder objects for random selection
 
 Thunder *Thunders[MAX_NUMBER_OF_THUNDERS];
@@ -26,7 +27,7 @@ elapsedMillis RefreshOutputTimer = 0;
 elapsedMillis IRRepeatTimeout = 0;
 #define IR_REPEAT_TIMEOUT 200
 
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 boolean LastFrameShowed = true;
 
@@ -74,13 +75,15 @@ uint8_t Brightness = 0;
 void setup()
 {
   Serial.begin(115200);
+  
 #ifdef DEBUG_MODE
-  while (!Serial)
+  while (!Serial.dtr())
     ;
 #endif
 Serial.println("Welcome to LEDCLOUD");
   init_SD();
   init_Player();
+  Serial.println("Parsing color file.");
   ParseColorFile(IRColorMap, 20);
 
   FastLED.addLeds<NEOPIXEL, 2>(StripCommander.leds, 0 * NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
@@ -108,11 +111,13 @@ void taskManager()
   if (RefreshOutputTimer >= OUTPUT_REFRESH_RATE)
   {
     RefreshOutputTimer = 0;
+
     for (int T = 0; T < NumberOfInitializedThunders; T++)
     {
       Thunders[T]->Update();
     }
     StripCommander.dynamicStateUpdate();
+
     if (StripCommander.RunningFX) //Update output only if necessary, RefreshOutputTimer is reset only if frame is displayed ==> As soon as one frame il
     {
       StripCommander.StateChanged = false;
@@ -231,7 +236,7 @@ void serialParse()
       uint8_t V = doc["V"];     // 1
       StripCommander.fadeToHSV(H, S, V, Delay);
     }
-    else if (strcmp(command, "setToHSV") == 0) //{command:setToHSV,H:255,S:100,V:0}
+    else if (strcmp(command, "setToHSV") == 0) //{"command":"setToHSV","H":"255","S":"255","V":"255"}
     {
       uint8_t H = doc["H"]; // 0
       uint8_t S = doc["S"]; // 1
@@ -246,7 +251,13 @@ void serialParse()
       uint8_t V = doc["V"]; // 1
       int buttonID = doc["ButtonID"];
       StripCommander.setToHSV(H, S, V);
-      IRColorMap[buttonID] = CHSV(H, S, V);
+      LastFrameShowed = false;
+      IRColorMap[buttonID-1] = CHSV(H, S, V);
+    }
+    else if (strcmp(command, "callColor") == 0) //{command:setToHSV,H:255,S:100,V:0}
+    {
+      int buttonID = doc["ButtonID"];
+      StripCommander.setToHSV(IRColorMap[buttonID-1]);
       LastFrameShowed = false;
     }
     else if (strcmp(command, "rainbow") == 0) //{command:rainbow}
@@ -289,6 +300,10 @@ void serialParse()
     else if (strcmp(command, "thunder") == 0) //{command:thunder}
     {
       startRandomThunder();
+    }
+    else if (strcmp(command, "version") == 0) //{command:thunder}
+    {
+      Serial.println(VERSION);
     }
     else
     {
@@ -449,12 +464,13 @@ void ParseColorFile(CHSV ColorTable[], int NumberOfColors)
       }
     }
   }
-
+  else Serial.println("\"Colors.txt\" does not exist on SD.");
   for (int i = 0; i < NumberOfColors; i++)
   {
     ColorTable[i] = CHSV(0, 0, 0);
   }
 }
+
 void WriteColorFile(CHSV ColorTable[], int NumberOfColors)
 {
   const size_t capacity = JSON_ARRAY_SIZE(NumberOfColors) + 20 * JSON_OBJECT_SIZE(3);
@@ -467,7 +483,10 @@ void WriteColorFile(CHSV ColorTable[], int NumberOfColors)
     tempJsonObj["S"] = ColorTable[i].s;
     tempJsonObj["V"] = ColorTable[i].v;
   }
+  Serial.println("Writing \"Colors.txt\".");
   File file = SD.open("Colors.txt", FILE_WRITE);
   serializeJson(JsonDoc, file);
+  serializeJson(JsonDoc, Serial);
+  Serial.println();
   file.close();
 }
